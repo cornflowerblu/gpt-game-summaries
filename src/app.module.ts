@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
-// import { UsersModule } from './users/users.module';
+import { UsersModule } from './users/users.module';
 import { CryptoModule } from './crypto/crypto.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 // import { GamesModule } from './games/games.module';
@@ -35,7 +35,7 @@ import crypto from './config/crypto';
       inject: [ConfigService],
     }),
     // EventEmitterModule.forRoot(),
-    // UsersModule,
+    UsersModule,
     // GamesModule,
     AuthModule,
     CryptoModule,
