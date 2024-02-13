@@ -5,7 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { CryptoModule } from './crypto/crypto.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-// import { GamesModule } from './games/games.module';
+import { GamesModule } from './games/games.module';
 import { AuthModule } from './auth/auth.module';
 import { PlayersModule } from './players/players.module';
 // import { ChatsModule } from './chats/chats.module';
@@ -36,7 +36,7 @@ import crypto from './config/crypto';
     }),
     EventEmitterModule.forRoot(),
     UsersModule,
-    // GamesModule,
+    GamesModule,
     AuthModule,
     CryptoModule,
     PlayersModule,
