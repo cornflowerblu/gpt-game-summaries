@@ -7,10 +7,10 @@ import { CryptoModule } from './crypto/crypto.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 // import { GamesModule } from './games/games.module';
 import { AuthModule } from './auth/auth.module';
-// import { PlayersModule } from './players/players.module';
+import { PlayersModule } from './players/players.module';
 // import { ChatsModule } from './chats/chats.module';
 // import { TwilioModule } from './twilio/twilio.module';
-// import { EventEmitterModule } from '@nestjs/event-emitter';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import database, { DatabaseConfig } from './config/database';
 // import chat from './config/chat';
 // import twilio from './config/twilio';
@@ -34,12 +34,12 @@ import crypto from './config/crypto';
       }),
       inject: [ConfigService],
     }),
-    // EventEmitterModule.forRoot(),
+    EventEmitterModule.forRoot(),
     UsersModule,
     // GamesModule,
     AuthModule,
     CryptoModule,
-    // PlayersModule,
+    PlayersModule,
     // ChatsModule,
     // TwilioModule,
     // HttpModule,
