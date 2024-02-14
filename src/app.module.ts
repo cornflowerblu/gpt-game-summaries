@@ -8,12 +8,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GamesModule } from './games/games.module';
 import { AuthModule } from './auth/auth.module';
 import { PlayersModule } from './players/players.module';
-// import { ChatsModule } from './chats/chats.module';
-// import { TwilioModule } from './twilio/twilio.module';
+import { ChatsModule } from './chats/chats.module';
+import { TwilioModule } from './twilio/twilio.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import database, { DatabaseConfig } from './config/database';
-// import chat from './config/chat';
-// import twilio from './config/twilio';
+import chat from './config/chat';
+import twilio from './config/twilio';
 import health from './config/health';
 import crypto from './config/crypto';
 // import { HttpModule } from '@nestjs/axios';
@@ -22,7 +22,7 @@ import crypto from './config/crypto';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [health, crypto, database /* chat, twilio, worker*/],
+      load: [health, crypto, database, chat, twilio /* worker*/],
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -40,8 +40,8 @@ import crypto from './config/crypto';
     AuthModule,
     CryptoModule,
     PlayersModule,
-    // ChatsModule,
-    // TwilioModule,
+    ChatsModule,
+    TwilioModule,
     // HttpModule,
   ],
   controllers: [AppController],
