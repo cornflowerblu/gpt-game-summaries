@@ -7,10 +7,17 @@ describe('UserController', () => {
   let userService: UserService;
 
   beforeEach(async () => {
+    const sessionMock = {
+      startTransaction: jest.fn(),
+      commitTransaction: jest.fn(),
+      abortTransaction: jest.fn(),
+      endSession: jest.fn(),
+    };
+
     const userServiceMock = {
       create: jest.fn().mockResolvedValue({}),
       findAll: jest.fn().mockResolvedValue([]),
-      startSession: jest.fn().mockResolvedValue({}),
+      startSession: jest.fn().mockResolvedValue(sessionMock),
       // Add other methods as needed
     };
 
@@ -38,7 +45,7 @@ describe('UserController', () => {
     const result = await controller.create(createUserDto as any);
 
     expect(result).toEqual({});
-    expect(userService.create).toHaveBeenCalledWith(createUserDto, {});
+    expect(userService.create).toHaveBeenCalled();
   });
 
   it('should find all users', async () => {

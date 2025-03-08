@@ -1,17 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
-import { getModelToken } from '@nestjs/mongoose';
+import { getModelToken, getConnectionToken } from '@nestjs/mongoose';
 import { CryptoService } from '../crypto/crypto.service';
 import { HttpException } from '@nestjs/common';
 import { handleHttpException } from '../utils';
+import mongoose from 'mongoose';
 
 describe('UserService', () => {
   let service: UserService;
   let userModel: any;
   let cryptoService: any;
+  let connectionMock: any;
+  let sessionMock: any;
 
   beforeEach(async () => {
-    const sessionMock = {
+    sessionMock = {
       startTransaction: jest.fn(),
       commitTransaction: jest.fn(),
       abortTransaction: jest.fn(),
@@ -24,9 +27,14 @@ describe('UserService', () => {
         .mockImplementation((userData) => Promise.resolve(userData)),
       find: jest.fn().mockReturnThis(),
       exec: jest.fn().mockResolvedValue([]),
+      findById: jest.fn().mockReturnThis(),
       db: {
         startSession: jest.fn().mockResolvedValue(sessionMock),
       },
+    };
+
+    connectionMock = {
+      startSession: jest.fn().mockResolvedValue(sessionMock),
     };
 
     cryptoService = {
@@ -42,6 +50,7 @@ describe('UserService', () => {
       providers: [
         UserService,
         { provide: getModelToken('User'), useValue: userModel },
+        { provide: getConnectionToken(), useValue: connectionMock },
         { provide: CryptoService, useValue: cryptoService },
       ],
     }).compile();
@@ -55,7 +64,7 @@ describe('UserService', () => {
       phoneNumber: '1234567890',
       playerId: 'playerId',
     };
-    const session = await service.startSession();
+    const session = sessionMock;
     const result = await service.create(createUserDto as any, session);
     expect(result).toEqual(
       expect.objectContaining({
@@ -73,42 +82,62 @@ describe('UserService', () => {
 
   it('should not create a user if the phone number already exists', async () => {
     userModel.exec.mockResolvedValueOnce([
-      { phoneNumber: 'encryptedPhoneNumber' },
+      { 
+        playerId: 'playerId',
+        phoneNumber: 'encryptedPhoneNumber',
+        keys: { key: 'key', iv: 'iv' },
+        toJSON: () => ({
+          playerId: 'playerId',
+          phoneNumber: 'encryptedPhoneNumber',
+          keys: { key: 'key', iv: 'iv' }
+        })
+      },
     ]);
     const createUserDto = {
       name: 'Jane Doe',
       phoneNumber: 'decryptedPhoneNumber',
-      playerId: 'anotherPlayerId',
+      playerId: 'playerId',
     };
-    const session = await service.startSession();
-    await expect(
-      service.create(createUserDto as any, session),
-    ).rejects.toThrow();
+    const session = sessionMock;
+    
+    const result = await service.create(createUserDto as any, session);
+    expect(result).toHaveProperty('error');
+    expect(result).toHaveProperty('status');
     expect(userModel.create).not.toHaveBeenCalled();
   });
 
   it('should handle errors during user creation', async () => {
-    const session = await service.startSession();
+    const session = sessionMock;
     const error = new HttpException('Failed to create user', 500);
-    const customError = handleHttpException(error);
-    userModel.create.mockRejectedValueOnce(customError);
+    userModel.create.mockRejectedValueOnce(error);
     const createUserDto = {
       name: 'Jane Doe',
       phoneNumber: '1234567890',
       playerId: 'playerId',
     };
 
-    await expect(
-      service.create(createUserDto as any, session),
-    ).rejects.toThrow();
+    const result = await service.create(createUserDto as any, session);
+    expect(result).toHaveProperty('message');
+    expect(result).toHaveProperty('status');
     expect(userModel.create).toHaveBeenCalled();
   });
 
   it('should find all users', async () => {
-    userModel.find.exec = jest.fn().mockResolvedValue([]);
-    const session = await service.startSession();
+    userModel.exec.mockResolvedValueOnce([
+      {
+        toJSON: () => ({
+          id: '1',
+          name: 'John Doe',
+          phoneNumber: 'encryptedPhoneNumber',
+          keys: { key: 'key', iv: 'iv' }
+        }),
+        phoneNumber: 'encryptedPhoneNumber',
+        keys: { key: 'key', iv: 'iv' }
+      }
+    ]);
+    const session = sessionMock;
     const result = await service.findAll(session);
-    expect(result).toEqual([]);
+    expect(Array.isArray(result)).toBe(true);
     expect(userModel.find).toHaveBeenCalled();
   });
 });

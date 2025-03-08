@@ -1,22 +1,51 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ConfigService } from '@nestjs/config';
+import { HttpStatus } from '@nestjs/common';
 
 describe('AppController', () => {
   let appController: AppController;
+  let appService: AppService;
+  let configService: ConfigService;
 
   beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
+    const moduleRef = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService],
+      providers: [
+        {
+          provide: AppService,
+          useValue: {
+            getHealth: jest.fn(),
+          },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
-    appController = app.get<AppController>(AppController);
+    appService = moduleRef.get<AppService>(AppService);
+    configService = moduleRef.get<ConfigService>(ConfigService);
+    appController = moduleRef.get<AppController>(AppController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+  describe('getHealth', () => {
+    it('should return health status from AppService', async () => {
+      const healthResult = {
+        status: HttpStatus.OK,
+        message: 'test server is running at 2023-01-01T12:00:00Z',
+      };
+      
+      jest.spyOn(appService, 'getHealth').mockResolvedValue(healthResult);
+
+      const result = await appController.getHealth();
+      
+      expect(appService.getHealth).toHaveBeenCalled();
+      expect(result).toBe(healthResult);
     });
   });
 });

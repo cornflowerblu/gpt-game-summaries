@@ -3,10 +3,12 @@ import { getModelToken } from '@nestjs/mongoose';
 import { ChatsService } from './chats.service';
 import { Chat } from './chats.schema';
 import { ClientSession } from 'mongoose';
+import { ConfigService } from '@nestjs/config';
 
 describe('ChatsService', () => {
   let service: ChatsService;
   let chatModel: any;
+  let configService: any;
 
   beforeEach(async () => {
     chatModel = {
@@ -15,6 +17,13 @@ describe('ChatsService', () => {
         startSession: jest.fn(),
       },
       find: jest.fn(),
+      collection: {
+        drop: jest.fn(),
+      },
+    };
+
+    configService = {
+      get: jest.fn().mockReturnValue('mock-api-key'),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -23,6 +32,10 @@ describe('ChatsService', () => {
         {
           provide: getModelToken(Chat.name),
           useValue: chatModel,
+        },
+        {
+          provide: ConfigService,
+          useValue: configService,
         },
       ],
     }).compile();

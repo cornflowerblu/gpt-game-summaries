@@ -1,0 +1,91 @@
+{
+  "family": "overtime-ote-player-summaries",
+  "networkMode": "awsvpc",
+  "executionRoleArn": "arn:aws:iam::443370689229:role/EcsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::443370689229:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "overtime-ote-player-summaries",
+      "image": "443370689229.dkr.ecr.us-east-1.amazonaws.com/overtime-ote-player-summaries:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 80,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "PORT",
+          "value": "80"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "ENCRYPTION_KEY",
+          "valueFrom": "arn:aws:ssm:us-east-1:443370689229:parameter/overtime/ENCRYPTION_KEY"
+        },
+        {
+          "name": "SALT",
+          "valueFrom": "arn:aws:ssm:us-east-1:443370689229:parameter/overtime/SALT"
+        },
+        {
+          "name": "OPENAI_API_KEY",
+          "valueFrom": "arn:aws:ssm:us-east-1:443370689229:parameter/overtime/OPENAI_API_KEY"
+        },
+        {
+          "name": "DB_PASS",
+          "valueFrom": "arn:aws:ssm:us-east-1:443370689229:parameter/overtime/DB_PASS"
+        },
+        {
+          "name": "DB_NAME",
+          "valueFrom": "arn:aws:ssm:us-east-1:443370689229:parameter/overtime/DB_NAME"
+        },
+        {
+          "name": "HEALTH_CHECK",
+          "valueFrom": "arn:aws:ssm:us-east-1:443370689229:parameter/overtime/HEALTH_CHECK"
+        },
+        {
+          "name": "TWILIO_ACCOUNT_SID",
+          "valueFrom": "arn:aws:ssm:us-east-1:443370689229:parameter/overtime/TWILIO_ACCOUNT_SID"
+        },
+        {
+          "name": "TWILIO_AUTH_TOKEN",
+          "valueFrom": "arn:aws:ssm:us-east-1:443370689229:parameter/overtime/TWILIO_AUTH_TOKEN"
+        },
+        {
+          "name": "API_KEY",
+          "valueFrom": "arn:aws:ssm:us-east-1:443370689229:parameter/overtime/API_KEY"
+        },
+        {
+          "name": "SMS_URL",
+          "valueFrom": "arn:aws:ssm:us-east-1:443370689229:parameter/overtime/SMS_URL"
+        },
+        {
+          "name": "ANALYSIS_URL",
+          "valueFrom": "arn:aws:ssm:us-east-1:443370689229:parameter/overtime/ANALYSIS_URL"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/overtime-ote-player-summaries",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "cpu": 256,
+      "memory": 512
+    }
+  ],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "256",
+  "memory": "512"
+}
