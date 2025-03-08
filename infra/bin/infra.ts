@@ -16,15 +16,15 @@ const infraStack = new OvertimeOtePlayerSummariesStack(app, 'OvertimeOtePlayerSu
 
 // Pipeline stack
 new OvertimePipelineStack(app, 'OvertimePipelineStack', {
-  env: { 
-    account: process.env.CDK_DEFAULT_ACCOUNT, 
-    region: process.env.CDK_DEFAULT_REGION || 'us-east-1' 
-  },
-  ecrRepository: infraStack.ecrRepository,
+  ecrRepository: infraStack.ecrRepository, // Fix reference to use infraStack
   ecsCluster: 'overtime-cluster',
-  ecsService: 'overtime-ote-player-summaries-80',
-  githubOwner: 'your-github-username', // Replace with your GitHub username
-  githubRepo: 'overtime-ote-player-summaries', // Replace with your repository name
-  githubBranch: 'main', // Replace with your branch name
-  githubTokenSecretName: 'github-token', // Name of the secret in AWS Secrets Manager containing your GitHub token
+  ecsService: 'overtime-ote-player-summaries-80', 
+  githubOwner: 'cornflowerblu',
+  githubRepo: 'gpt-game-summaries',
+  githubBranch: 'amazon-q-developer',
+  codestarConnectionArn: 'arn:aws:codeconnections:us-east-1:443370689229:connection/91220065-4063-449c-a1e1-682054889c6e',
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION
+  }
 });

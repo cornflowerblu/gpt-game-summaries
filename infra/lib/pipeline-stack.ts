@@ -8,14 +8,15 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 
 export interface PipelineStackProps extends cdk.StackProps {
+  codestarConnectionArn: string;
   ecrRepository: ecr.Repository;
   ecsCluster: string;
   ecsService: string;
   githubOwner: string;
   githubRepo: string;
   githubBranch: string;
-  githubTokenSecretName: string;
 }
+
 
 export class OvertimePipelineStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: PipelineStackProps) {
@@ -26,6 +27,33 @@ export class OvertimePipelineStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
       encryption: cdk.aws_s3.BucketEncryption.S3_MANAGED,
+    });
+
+    // Create a custom resource provider for S3 auto-delete objects
+    const customResourceRole = new iam.Role(this, 'CustomS3AutoDeleteObjectsRole', {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')
+      ],
+      inlinePolicies: {
+        's3AutoDeletePolicy': new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              effect: iam.Effect.ALLOW,
+              actions: [
+                's3:DeleteObject*',
+                's3:GetBucket*',
+                's3:List*',
+                's3:PutBucketPolicy'
+              ],
+              resources: [
+                artifactBucket.bucketArn,
+                `${artifactBucket.bucketArn}/*`
+              ]
+            })
+          ]
+        })
+      }
     });
 
     // CodeBuild role
@@ -164,20 +192,20 @@ export class OvertimePipelineStack extends cdk.Stack {
     const pipeline = new codepipeline.Pipeline(this, 'Pipeline', {
       role: pipelineRole,
       artifactBucket: artifactBucket,
-      pipelineName: 'overtime-ote-player-summaries-pipeline',
+      pipelineName: `overtime-ote-player-summaries-webhook-${Math.random().toString(36).substring(2, 7)}`
     });
 
     // Source stage
     const sourceOutput = new codepipeline.Artifact('SourceCode');
     
-    const sourceAction = new codepipeline_actions.GitHubSourceAction({
+
+    const sourceAction = new codepipeline_actions.CodeStarConnectionsSourceAction({
       actionName: 'GitHub_Source',
       owner: props.githubOwner,
       repo: props.githubRepo,
       branch: props.githubBranch,
-      oauthToken: cdk.SecretValue.secretsManager(props.githubTokenSecretName),
+      connectionArn: props.codestarConnectionArn,
       output: sourceOutput,
-      trigger: codepipeline_actions.GitHubTrigger.WEBHOOK,
     });
 
     pipeline.addStage({

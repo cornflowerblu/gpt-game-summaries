@@ -271,21 +271,21 @@ export class OvertimeOtePlayerSummariesStack extends cdk.Stack {
     
 
     // Import existing listener using attributes instead of lookup
-    const listener = elasticloadbalancingv2.ApplicationListener.fromApplicationListenerAttributes(this, '325862f23e77bd75', {
+    const listener = elasticloadbalancingv2.ApplicationListener.fromApplicationListenerAttributes(this, 'ExistingRule', {
       listenerArn: 'arn:aws:elasticloadbalancing:us-east-1:443370689229:listener/app/overtime-alb/cc344f6845c89b93/325862f23e77bd75',
       securityGroup: securityGroup
     });
 
     // Try to create listener rule with a unique ID to avoid conflicts
     try {      
-      const ruleId = '444800402b109686';
+      const ruleId = 'OtePlayerSummariesRule';
       new elasticloadbalancingv2.ApplicationListenerRule(this, ruleId, {
         listener: listener,
-        priority: 100, // Adjust priority as needed
+        priority: 200, // Adjust priority as needed
         conditions: [
-          elasticloadbalancingv2.ListenerCondition.pathPatterns(['/ote-player-summaries/*']), // Adjust path pattern as needed
+          elasticloadbalancingv2.ListenerCondition.pathPatterns(['/*']), // Adjust path pattern as needed
         ],
-        targetGroups: [targetGroup]
+        action: elasticloadbalancingv2.ListenerAction.forward([targetGroup])
       });
     } catch (e) {
       console.log('Listener rule may already exist, skipping creation');
