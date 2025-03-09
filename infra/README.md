@@ -1,3 +1,23 @@
+# MongoDB Setup
+
+This project now includes a MongoDB instance that runs in ECS alongside the application. The MongoDB instance is deployed as a separate stack and the application stack depends on it.
+
+## Required SSM Parameters
+
+Before deploying, make sure you have the following SSM parameters set up:
+
+- `/overtime/MONGO_USERNAME`: MongoDB admin username
+- `/overtime/MONGO_PASSWORD`: MongoDB admin password
+- `/overtime/DB_NAME`: MongoDB database name
+
+## MongoDB Connection
+
+The MongoDB connection string is stored in SSM Parameter Store at `/overtime/MONGO_CONNECTION_STRING`. The application can use this connection string to connect to the MongoDB instance.
+
+## Data Persistence
+
+The MongoDB instance uses an EFS volume for data persistence. Make sure to replace the placeholder EFS ID and access point ID in the `mongodb-stack.ts` file with your actual values.
+
 # Overtime OTE Player Summaries Infrastructure
 
 This directory contains the AWS CDK code for deploying the Overtime OTE Player Summaries service.

@@ -163,13 +163,19 @@ export class OvertimeOtePlayerSummariesStack extends cdk.Stack {
         ),
         DB_PASS: ecs.Secret.fromSsmParameter(
           ssm.StringParameter.fromSecureStringParameterAttributes(this, 'DbPassParam', {
-            parameterName: '/overtime/DB_PASS',
+            parameterName: '/overtime/MONGO_PASSWORD',
             version: 1
           })
         ),
         DB_NAME: ecs.Secret.fromSsmParameter(
           ssm.StringParameter.fromSecureStringParameterAttributes(this, 'DbNameParam', {
             parameterName: '/overtime/DB_NAME',
+            version: 1
+          })
+        ),
+        MONGO_CONNECTION_STRING: ecs.Secret.fromSsmParameter(
+          ssm.StringParameter.fromSecureStringParameterAttributes(this, 'MongoConnectionStringParam', {
+            parameterName: '/overtime/MONGO_CONNECTION_STRING',
             version: 1
           })
         ),

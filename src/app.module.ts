@@ -27,10 +27,7 @@ import crypto from './config/crypto';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService<DatabaseConfig>) => ({
-        uri: `mongodb+srv://ote:${configService.get(
-          'password',
-        )}@ote-game-summary.udgyq8s.mongodb.net/?retryWrites=true&w=majority`,
-        dbName: `${configService.get('dbName')}`,
+        uri: configService.get('uri'),
       }),
       inject: [ConfigService],
     }),
