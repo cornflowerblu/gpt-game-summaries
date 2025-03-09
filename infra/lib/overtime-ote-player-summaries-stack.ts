@@ -54,11 +54,16 @@ export class OvertimeOtePlayerSummariesStack extends cdk.Stack {
         'TaskExecutionRole',
         'EcsTaskExecutionRole'
       );
-      // Create a new role with a different name to avoid conflicts
-      executionRole = new iam.Role(this, 'TaskExecutionRoleNew', {
-        assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
-        roleName: 'EcsTaskExecutionRole-new'
-      });
+      if (importedRole){
+        console.log('Roles already exist');
+        return;
+      } else {
+        // Create a new role with a different name to avoid conflicts
+        executionRole = new iam.Role(this, 'TaskExecutionRoleNew', {
+          assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+          roleName: 'EcsTaskExecutionRole-new'
+        });
+      }      
     } catch (e) {
       executionRole = new iam.Role(this, 'TaskExecutionRoleNew', {
         assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
@@ -81,11 +86,16 @@ export class OvertimeOtePlayerSummariesStack extends cdk.Stack {
         'TaskRole',
         'ecsTaskRole'
       );
-      // Create a new role with the same name if we need to modify it
-      taskRole = new iam.Role(this, 'TaskRoleNew', {
+      if (importedRole) {
+        console.log('Roles already exist');
+        return;
+      } else {
+        // Create a new role with the same name if we need to modify it
+        taskRole = new iam.Role(this, 'TaskRoleNew', {
         assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
         roleName: 'ecsTaskRole-new'
-      });
+        });
+      }
     } catch (e) {
       taskRole = new iam.Role(this, 'TaskRoleNew', {
         assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
@@ -228,8 +238,8 @@ export class OvertimeOtePlayerSummariesStack extends cdk.Stack {
     // Import existing load balancer using ARN directly instead of lookup
     const loadBalancer = elasticloadbalancingv2.ApplicationLoadBalancer.fromApplicationLoadBalancerAttributes(this, 'ExistingALB', {
       loadBalancerArn: 'arn:aws:elasticloadbalancing:us-east-1:443370689229:loadbalancer/app/overtime-alb/cc344f6845c89b93',
-      securityGroupId: 'sg-0ca5d85cbc46902fa', // Use the same security group ID as the service
-      loadBalancerDnsName: 'overtime-alb-123456789.us-east-1.elb.amazonaws.com', // Replace with actual DNS name if known      
+      securityGroupId: 'sg-0ef27471630b2a9c2', // Use the same security group ID as the service
+      loadBalancerDnsName: 'overtime-alb-1532951578.us-east-1.elb.amazonaws.com', // Replace with actual DNS name if known      
       vpc      
     });
 
@@ -243,7 +253,7 @@ export class OvertimeOtePlayerSummariesStack extends cdk.Stack {
         this,
         'ExistingTargetGroup',
         {
-          targetGroupArn: `arn:aws:elasticloadbalancing:${this.region}:${this.account}:targetgroup/${targetGroupName}/\*`,
+          targetGroupArn: 'arn:aws:elasticloadbalancing:us-east-1:443370689229:targetgroup/overtime-tg-80/ab45188da6d97ae2',
           loadBalancerArns: loadBalancer.loadBalancerArn,
         }
       ) as any;
@@ -279,23 +289,26 @@ export class OvertimeOtePlayerSummariesStack extends cdk.Stack {
     // Import existing listener using attributes instead of lookup
     const listener = elasticloadbalancingv2.ApplicationListener.fromApplicationListenerAttributes(this, 'ExistingRule', {
       listenerArn: 'arn:aws:elasticloadbalancing:us-east-1:443370689229:listener/app/overtime-alb/cc344f6845c89b93/325862f23e77bd75',
-      securityGroup: securityGroup
+      securityGroup: securityGroup,      
     });
 
     // Try to create listener rule with a unique ID to avoid conflicts
-    try {      
-      const ruleId = 'OtePlayerSummariesRule';
-      new elasticloadbalancingv2.ApplicationListenerRule(this, ruleId, {
-        listener: listener,
-        priority: 200, // Adjust priority as needed
-        conditions: [
-          elasticloadbalancingv2.ListenerCondition.pathPatterns(['/*']), // Adjust path pattern as needed
-        ],
-        action: elasticloadbalancingv2.ListenerAction.forward([targetGroup])
-      });
-    } catch (e) {
-      console.log('Listener rule may already exist, skipping creation');
-    }
+    try {
+  if (listener) {      
+    new elasticloadbalancingv2.ApplicationListenerRule(this, 'Default', {
+      listener: listener,
+      priority: 100,
+      conditions: [
+        elasticloadbalancingv2.ListenerCondition.pathPatterns(['/*'])
+      ],
+      action: elasticloadbalancingv2.ListenerAction.forward([targetGroup])
+    });
+  } else {
+    console.log('Listener not found, skipping rule creation');
+    return;
+  }
+} catch(e) {
+  console.log('Listener rule may already exist, skipping creation');
 
     // Try to import existing Fargate service, create if it doesn't exist
     try {
@@ -315,18 +328,16 @@ export class OvertimeOtePlayerSummariesStack extends cdk.Stack {
         desiredCount: 1,
         serviceName: 'overtime-ote-player-summaries-80',
         assignPublicIp: true,
-        securityGroups: [securityGroup],
         vpcSubnets: {
           subnets: [
             ec2.Subnet.fromSubnetId(this, 'Subnet1', 'subnet-0d4eb4c019ed1991d'),
             ec2.Subnet.fromSubnetId(this, 'Subnet2', 'subnet-08f3f862d2ed8c20c')
           ]
         }
-      });
-
+      })
+    };
       // Attach service to target group
       this.fargateService.attachToApplicationTargetGroup(targetGroup);
-    }
 
     // Output the service URL
     new cdk.CfnOutput(this, 'ServiceURL', {
@@ -338,4 +349,5 @@ export class OvertimeOtePlayerSummariesStack extends cdk.Stack {
       value: this.ecrRepository.repositoryUri
     });
   }
+}
 }
